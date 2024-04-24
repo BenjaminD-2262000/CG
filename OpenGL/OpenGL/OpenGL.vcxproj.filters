@@ -1,0 +1,141 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Resource Files\NewFilter1">
+      <UniqueIdentifier>{651294e6-6ef0-4bf7-91a2-ddae8ed1d4c8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files\Textures">
+      <UniqueIdentifier>{ebab7d2e-6520-4f9e-9e85-e8e6987e7720}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files\Models">
+      <UniqueIdentifier>{2bb7a357-e06e-42cc-b5ea-52705e2da638}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files\Models\bunny">
+      <UniqueIdentifier>{f5399b7b-2c8a-4454-914c-fb07dbfd85ac}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="glad.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Shader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="VBO.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="EBO.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="VAO.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Camera.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="stb.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Texture.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Mesh.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Model.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Landscape.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="default.vert">
+      <Filter>Resource Files\NewFilter1</Filter>
+    </None>
+    <None Include="default.frag">
+      <Filter>Resource Files\NewFilter1</Filter>
+    </None>
+    <None Include="light.frag">
+      <Filter>Resource Files\NewFilter1</Filter>
+    </None>
+    <None Include="light.vert">
+      <Filter>Resource Files\NewFilter1</Filter>
+    </None>
+    <None Include="bunny\scene.gltf">
+      <Filter>Resource Files\Models\bunny</Filter>
+    </None>
+    <None Include="bunny\scene.bin">
+      <Filter>Resource Files\Models\bunny</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Shader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="VBO.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="EBO.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="VAO.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Camera.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Texture.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Mesh.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Model.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Landscape.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="brick.png">
+      <Filter>Resource Files\Textures</Filter>
+    </Image>
+    <Image Include="planks.png">
+      <Filter>Resource Files\Textures</Filter>
+    </Image>
+    <Image Include="planksSpec.png">
+      <Filter>Resource Files\Textures</Filter>
+    </Image>
+    <Image Include="bunny\baseColor.png">
+      <Filter>Resource Files\Models\bunny</Filter>
+    </Image>
+    <Image Include="bunny\metallicRoughness.png">
+      <Filter>Resource Files\Models\bunny</Filter>
+    </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="terrain.vert">
+      <Filter>Resource Files\NewFilter1</Filter>
+    </Text>
+    <Text Include="terrain.frag">
+      <Filter>Resource Files\NewFilter1</Filter>
+    </Text>
+  </ItemGroup>
+</Project>
