@@ -83,6 +83,12 @@
     <None Include="bunny\scene.bin">
       <Filter>Resource Files\Models\bunny</Filter>
     </None>
+    <None Include="skybox.vert">
+      <Filter>Resource Files\NewFilter1</Filter>
+    </None>
+    <None Include="skybox.frag">
+      <Filter>Resource Files\NewFilter1</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Shader.h">
