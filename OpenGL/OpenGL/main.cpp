@@ -59,7 +59,7 @@ int main()
 	// Creates camera object
 	Camera camera(SCREEN_WIDTH, SCREEN_HEIGTH, glm::vec3(0.0f, 0.0f, 2.0f));
 
-	Landscape LS("recourses/heightmap.png", 1);
+	Landscape LS("recourses/Heigtmaps/heightmap.png", 1);
 	Model model("models/bunny/scene.gltf");
 
 	// Main while loop

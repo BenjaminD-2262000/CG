@@ -72,7 +72,6 @@ void Landscape::drawTerrain(Shader& shader, Camera& camera)
 	camera.Matrix(shader, "camMatrix");
 	glm::mat4 model = glm::mat4(1.0f);
 	glUniformMatrix4fv(glGetUniformLocation(shader.ID, "model"), 1, GL_FALSE, glm::value_ptr(model));
-	Texture grassTex("Textures/grass.jpg", GL_TEXTURE_2D, GL_TEXTURE0);
 
 	int numStrips = (m_height - 1) / m_rezolution;
 	int numTrisPerStrip = (m_width / m_rezolution) * 2 - 2;
