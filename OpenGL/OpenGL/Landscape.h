@@ -17,6 +17,8 @@ private:
 	std::vector<Vertex> m_vertices;
 	std::vector<GLuint> m_indices;
 	VAO m_VAO;
+	Texture m_texture = Texture("recourses/Textures/rocks.jpg", "diffuse", 0);
+	Texture m_specular = Texture("recourses/Textures/rocks_spec.jpg", "specular", 1);
 
 	void generateVertices();
 	void generateIndices();
@@ -25,6 +27,5 @@ private:
 public:
 	Landscape(const char* heightmap, int rezolution);
 	void drawTerrain(Shader& shader, Camera& camera);
-
 };
 

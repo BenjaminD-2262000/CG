@@ -13,6 +13,8 @@ layout (location = 3) in vec2 aTex;
 out float Height;
 out vec3 Position;
 out vec3 v_Color;
+out vec2 texCoord;
+out vec3 Normal;
 
 // Imports the camera matrix from the main function
 uniform mat4 camMatrix;
@@ -25,4 +27,6 @@ void main()
 	Position = (camMatrix * model * vec4(aPos, 1.0)).xyz;
 	v_Color = vec3(1.0f,1.0f,1.0f);
 	gl_Position =  model * camMatrix * vec4(aPos, 1.0f);
+	texCoord = aTex;
+	Normal = aNormal;
 }
