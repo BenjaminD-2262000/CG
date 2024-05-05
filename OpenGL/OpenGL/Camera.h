@@ -10,6 +10,8 @@
 
 #include "Shader.h"
 
+class Landscape;
+
 class Camera
 {
 public:
@@ -26,17 +28,36 @@ public:
 	int width;
 	int height;
 
+	// Stores data of the landscape to calculate position
+	Landscape& m_landscape;
+
 	// Adjust the speed of the camera and it's sensitivity when looking around
 	float speed = 0.1f;
 	float sensitivity = 100.0f;
 
+	float verticalVelocity = 0.0f;
+	float jumpSpeed = 4.0f;
+
+	float cameraHeightOffset = 1.6f;
+
+	float gravity = 9.8f;
+
+	bool isJumping = false;
+
+	float previousTerrainHeight = 0.0f;
+
+
 	// Camera constructor to set up initial values
-	Camera(int width, int height, glm::vec3 position);
+	Camera(int width, int height, glm::vec3 position, Landscape& landscape);
+
+	void applyGravity(float deltaTime);
 
 	// Updates and exports the camera matrix to the Vertex Shader
 	void updateMatrix(float FOVdeg, float nearPlane, float farPlane);
 	void Matrix(Shader& shader, const char* uniform);
 	// Handles camera inputs
 	void Inputs(GLFWwindow* window);
+
+	float GetHeightCameraPosition();
 };
 

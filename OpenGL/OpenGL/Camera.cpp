@@ -1,10 +1,10 @@
 #include"Camera.h"
+#include "Landscape.h"
 
-Camera::Camera(int width, int height, glm::vec3 position)
+Camera::Camera(int width, int height, glm::vec3 position, Landscape& landscape)
+    : width(width), height(height), Position(position), m_landscape(landscape)
 {
-	Camera::width = width;
-	Camera::height = height;
-	Position = position;
+    // No need to assign to m_landscape here, because it's already been initialized
 }
 
 void Camera::updateMatrix(float FOVdeg, float nearPlane, float farPlane)
@@ -28,39 +28,36 @@ void Camera::Matrix(Shader& shader, const char* uniform)
 
 void Camera::Inputs(GLFWwindow* window)
 {
+	
 	// Handles key inputs
+	if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS && Position.y <= m_landscape.getHeight(Position.x, Position.z) + cameraHeightOffset)
+	{
+		verticalVelocity = jumpSpeed; // jumpSpeed is the initial speed of the jump
+		isJumping = true;
+	}
+
 	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
 	{
 		Position += speed * Orientation;
-	}
-	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-	{
-		Position += speed * -glm::normalize(glm::cross(Orientation, Up));
+		
 	}
 	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
 	{
 		Position += speed * -Orientation;
+		
+	}
+	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+	{
+		Position += speed * -glm::normalize(glm::cross(Orientation, Up));
+		
 	}
 	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
 	{
 		Position += speed * glm::normalize(glm::cross(Orientation, Up));
+		
 	}
-	if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
-	{
-		Position += speed * Up;
-	}
-	if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
-	{
-		Position += speed * -Up;
-	}
-	if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
-	{
-		speed = 0.4f;
-	}
-	else if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_RELEASE)
-	{
-		speed = 0.1f;
-	}
+
+
 
 	// Handles mouse inputs
 	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
@@ -109,4 +106,36 @@ void Camera::Inputs(GLFWwindow* window)
 		firstClick = true;
 	}
 
+}
+
+float Camera::GetHeightCameraPosition()
+{
+	return m_landscape.getHeight(Position.x, Position.z);
+}
+
+void Camera::applyGravity(float deltaTime)
+{
+	float currentTerrainHeight = m_landscape.getHeight(Position.x, Position.z);
+
+	if (!isJumping || currentTerrainHeight > previousTerrainHeight)
+	{
+		Position.y = currentTerrainHeight + cameraHeightOffset;
+	}
+	if (Position.y == currentTerrainHeight)
+	{
+		isJumping = false;
+	}
+	else
+	{
+		Position.y += verticalVelocity * deltaTime;
+	}
+	verticalVelocity -= gravity * deltaTime;
+	Position.y += verticalVelocity * deltaTime;
+
+	if (Position.y < m_landscape.getHeight(Position.x, Position.z) + cameraHeightOffset)
+	{
+		Position.y = m_landscape.getHeight(Position.x, Position.z) + cameraHeightOffset;
+		verticalVelocity = 0.0f;
+	}
+	previousTerrainHeight = currentTerrainHeight;
 }

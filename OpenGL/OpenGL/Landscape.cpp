@@ -98,4 +98,11 @@ void Landscape::drawTerrain(Shader& shader, Camera& camera)
 	m_VAO.Unbind();
 }
 
+float Landscape::getHeight(float x, float z)
+{
+	int row = static_cast<int>((x + m_height / 2.0f) * m_height / (float)m_height);
+	int col = static_cast<int>((z + m_width / 2.0f) * m_width / (float)m_width);
+	return m_vertices[col + m_width * row].Position.y;
+}
+
 
