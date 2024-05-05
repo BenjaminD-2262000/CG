@@ -27,5 +27,6 @@ private:
 public:
 	Landscape(const char* heightmap, int rezolution);
 	void drawTerrain(Shader& shader, Camera& camera);
+	float getHeight(float x, float z);
 };
 

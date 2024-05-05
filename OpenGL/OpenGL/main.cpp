@@ -80,7 +80,7 @@ int main()
 
 	//Skybox Shader object
 	Shader skyboxShader("skybox.vert", "skybox.frag");
-	
+
 
 	// Take care of all the light related things
 	glm::vec4 lightColor = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
@@ -91,7 +91,7 @@ int main()
 	shaderProgram.Activate();
 	glUniform4f(glGetUniformLocation(shaderProgram.ID, "lightColor"), lightColor.x, lightColor.y, lightColor.z, lightColor.w);
 	glUniform3f(glGetUniformLocation(shaderProgram.ID, "lightPos"), lightPos.x, lightPos.y, lightPos.z);
-	
+
 	skyboxShader.Activate();
 	glUniform1i(glGetUniformLocation(skyboxShader.ID, "skybox"), 0);
 
@@ -113,10 +113,12 @@ int main()
 	// Enables the Depth Buffer
 	glEnable(GL_DEPTH_TEST);
 
-	// Creates camera object
-	Camera camera(SCREEN_WIDTH, SCREEN_HEIGTH, glm::vec3(0.0f, 0.0f, 2.0f));
 
 	Landscape LS("recourses/Heigtmaps/heightmap.png", 1);
+	// Creates camera object
+	Camera camera(SCREEN_WIDTH, SCREEN_HEIGTH, glm::vec3(0.0f, 0.0f, 2.0f), LS);
+
+	
 	Model model("models/bunny/scene.gltf");
 
 
@@ -136,7 +138,7 @@ int main()
 	glBindVertexArray(0);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
-	
+
 	// All the faces of the cubemap (make sure they are in this exact order)
 	std::string facesCubemap[6] =
 	{
@@ -188,8 +190,10 @@ int main()
 			std::cout << "Failed to load texture: " << facesCubemap[i] << std::endl;
 			stbi_image_free(data);
 		}
-	} 
+	}
 
+	// variable to keep track of time (gravity)
+	float lastFrame = 0.0f;
 	// Main while loop
 	while (!glfwWindowShouldClose(window))
 	{
@@ -200,6 +204,13 @@ int main()
 
 		// Handles camera inputs
 		camera.Inputs(window);
+		
+		float currentFrame = glfwGetTime();
+		float deltaTime = currentFrame - lastFrame;
+		lastFrame = currentFrame;
+
+		camera.applyGravity(deltaTime);
+
 		// Updates and exports the camera matrix to the Vertex Shader
 		camera.updateMatrix(45.0f, 0.1f, 300.0f);
 
