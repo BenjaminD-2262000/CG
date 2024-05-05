@@ -63,6 +63,9 @@
     <ClCompile Include="Landscape.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ShadowMap.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="default.vert">
@@ -92,6 +95,12 @@
     <None Include="instanced.vert">
       <Filter>Resource Files\NewFilter1</Filter>
     </None>
+    <None Include="shadow.vert">
+      <Filter>Resource Files\NewFilter1</Filter>
+    </None>
+    <None Include="shadow.frag">
+      <Filter>Resource Files\NewFilter1</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Shader.h">
@@ -119,6 +128,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Landscape.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ShadowMap.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

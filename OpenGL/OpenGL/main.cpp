@@ -1,6 +1,7 @@
 #include "Model.h"
 #include "Landscape.h"
 #include <random>
+#include "ShadowMap.h"
 
 #define SCREEN_WIDTH 1000
 #define SCREEN_HEIGTH 1000
@@ -193,21 +194,40 @@ int main()
 	Camera camera(SCREEN_WIDTH, SCREEN_HEIGTH, glm::vec3(0.0f, 0.0f, 2.0f), LS);
 	std::vector <glm::mat4> instanceMatrix = randomInstanceMatrix(instanceCount, LS);
 
-
+	Model model3("models/fire/scene.gltf", &LS);
 	Model model("models/frog/scene.gltf", &LS, instanceCount, instanceMatrix);
 	Model model2("models/bunny/scene.gltf", &LS);
 
-
+	ShadowMap shadowMap(lightPos);
+	shadowMap.sendLightSpaceMatrix(shaderProgram);
 
 	// variable to keep track of time (gravity)
 	float lastFrame = 0.0f;
 	// Main while loop
 	while (!glfwWindowShouldClose(window))
 	{
+		// Preparations for the Shadow Map
+		shadowMap.drawShadows(model, camera);
+
+
+		// Draw scene for shadow map
+		Shader shadowShader = shadowMap.getShader();
+		model.Draw(shadowShader, camera);
+		LS.drawTerrain(shadowShader, camera);
+
+
+		// Switch back to the default framebuffer
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		// Switch back to the default viewport
+		glViewport(0, 0, SCREEN_WIDTH, SCREEN_HEIGTH);
+		glViewport(0, 0, SCREEN_WIDTH, SCREEN_HEIGTH);
+
 		// Specify the color of the background
 		glClearColor(0.07f, 0.13f, 0.17f, 1.0f);
 		// Clean the back buffer and depth buffer
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		glEnable(GL_DEPTH_TEST);
 
 		// Handles camera inputs
 		camera.Inputs(window);
@@ -221,8 +241,14 @@ int main()
 		// Updates and exports the camera matrix to the Vertex Shader
 		camera.updateMatrix(45.0f, 0.1f, 300.0f);
 
+		//send lightSpaceMatrix to shader
+		shadowMap.sendLightSpaceMatrix(shaderProgram);
+		//bind shadow map to shader
+		shadowMap.bind(shaderProgram);
+
 		// Draw a model
 		LS.drawTerrain(landScapeShader, camera);
+		model3.Draw(shaderProgram, camera, glm::vec2(1, 1));
 		model.Draw(instanceShader, camera);
 		model2.Draw(shaderProgram, camera, glm::vec2(0, 0));
 
