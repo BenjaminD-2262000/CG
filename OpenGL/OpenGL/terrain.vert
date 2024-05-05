@@ -24,7 +24,7 @@ uniform mat4 model;
 void main()
 {
 	Height = aPos.y;
-	Position = (camMatrix * model * vec4(aPos, 1.0)).xyz;
+	Position = (vec4(aPos, 1.0)).xyz;
 	v_Color = vec3(1.0f,1.0f,1.0f);
 	gl_Position =  model * camMatrix * vec4(aPos, 1.0f);
 	texCoord = aTex;

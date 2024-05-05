@@ -2,7 +2,6 @@
 
 void Landscape::generateVertices()
 {
-	float yScale = 64.0f / 256.0f, yShift = 16.0f;
 	float texScale = 100.0f;
 	for (int row = 0; row < m_height; row++)
 	{
@@ -18,9 +17,41 @@ void Landscape::generateVertices()
 
 			vertex.Position = glm::vec3(xpos, ypos, zpos);
 			vertex.Color = glm::vec3(1.0f, 1.0f, 1.0f);
-			vertex.Normal = glm::vec3(0.0f, 1.0f, 0.0f);
+			vertex.Normal = glm::vec3(1.0f, 1.0f, 1.0f);
 			vertex.TexUV = glm::vec2(col / (float)(m_width - 1) * texScale, row / (float)(m_height - 1) * texScale);
+			
 			m_vertices.push_back(vertex);
+		}
+	}
+}
+
+void Landscape::calculateNormals()
+{
+	for (int row = 0; row < m_height; row++)
+	{
+		for (int col = 0; col < m_width; col++)
+		{
+			// Get the indices of the neighboring vertices
+			int leftIndex = col - 1;
+			int rightIndex = col + 1;
+			int topIndex = row - 1;
+			int bottomIndex = row + 1;
+
+			// Check if the neighboring vertices are within bounds
+			if (leftIndex >= 0 && rightIndex < m_width && topIndex >= 0 && bottomIndex < m_height)
+			{
+				// Get the positions of the neighboring vertices
+				glm::vec3 leftPos = m_vertices[leftIndex + m_width * row].Position;
+				glm::vec3 rightPos = m_vertices[rightIndex + m_width * row].Position;
+				glm::vec3 topPos = m_vertices[col + m_width * topIndex].Position;
+				glm::vec3 bottomPos = m_vertices[col + m_width * bottomIndex].Position;
+
+				// Calculate the normal using cross product
+				glm::vec3 normal = glm::normalize(glm::cross(rightPos - leftPos, bottomPos - topPos));
+
+				// Update the normal of the current vertex
+				m_vertices[col + m_width * row].Normal = normal;
+			}
 		}
 	}
 }
@@ -61,7 +92,7 @@ Landscape::Landscape(const char* heightmap, int rezolution)
 	m_data = stbi_load(heightmap, &m_width, &m_height, &m_nChannels, 0);
 	m_rezolution = rezolution;
 	generateVertices();
-	stbi_image_free(m_data);
+	calculateNormals();
 	generateIndices();
 	setupMesh();
 }
@@ -96,6 +127,20 @@ void Landscape::drawTerrain(Shader& shader, Camera& camera)
 	}
 	
 	m_VAO.Unbind();
+}
+
+float Landscape::getHeight(float x, float z)
+{
+	int row = static_cast<int>((x + m_height / 2.0f) * m_height / (float)m_height);
+	int col = static_cast<int>((z + m_width / 2.0f) * m_width / (float)m_width);
+
+	// Ensure row and column indices are within bounds
+	if (row < 0) row = 0;
+	if (row >= m_height) row = m_height - 1;
+	if (col < 0) col = 0;
+	if (col >= m_width) col = m_width - 1;
+
+	return m_vertices[col + m_width * row].Position.y;
 }
 
 

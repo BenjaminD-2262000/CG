@@ -3,6 +3,7 @@
 
 #include <json/json.hpp>
 #include"Mesh.h"
+#include"Landscape.h"
 
 using json = nlohmann::json;
 
@@ -11,15 +12,22 @@ class Model
 {
 public:
 	// Loads in a model from a file and stores tha information in 'data', 'JSON', and 'file'
-	Model(const char* file);
+	Model(const char* file, Landscape* terrain, unsigned int instances, std::vector <glm::mat4> instanceMatrix);
+	Model(const char* file, Landscape* terrain);
 
 	void Draw(Shader& shader, Camera& camera);
+	void Draw(Shader& shader, Camera& camera, glm::vec2 location);
+
 
 private:
+
+	glm::vec3 m_averagePos = glm::vec3(0.0f, 0.0f, 0.0f);
+	Landscape* m_terrain;
 	// Variables for easy access
 	const char* file;
 	std::vector<unsigned char> data;
 	json JSON;
+	unsigned int m_instanceCount;
 
 	// All the meshes and transformations
 	std::vector<Mesh> meshes;
@@ -27,6 +35,7 @@ private:
 	std::vector<glm::quat> rotationsMeshes;
 	std::vector<glm::vec3> scalesMeshes;
 	std::vector<glm::mat4> matricesMeshes;
+	std::vector<glm::mat4> m_instanceMatrix;
 
 	// Prevents textures from being loaded twice
 	std::vector<std::string> loadedTexName;
@@ -52,10 +61,12 @@ private:
 		std::vector<glm::vec3> normals,
 		std::vector<glm::vec2> texUVs
 	);
-
 	// Helps with the assembly from above by grouping floats
 	std::vector<glm::vec2> groupFloatsVec2(std::vector<float> floatVec);
 	std::vector<glm::vec3> groupFloatsVec3(std::vector<float> floatVec);
 	std::vector<glm::vec4> groupFloatsVec4(std::vector<float> floatVec);
+
+	glm::vec3 calculateAveragePosition(const std::vector<glm::vec3>& positions);
+	float calculateMinY(const std::vector<glm::vec3>& positions);
 };
 #endif

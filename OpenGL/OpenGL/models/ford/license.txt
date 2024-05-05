@@ -1,0 +1,11 @@
+Model Information:
+* title:	Ford Seattle-ite XXI
+* source:	https://sketchfab.com/3d-models/ford-seattle-ite-xxi-cee636d4a9e44fe99e8bd27f034698b9
+* author:	dark_igorek (https://sketchfab.com/dark_igorek)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Ford Seattle-ite XXI" (https://sketchfab.com/3d-models/ford-seattle-ite-xxi-cee636d4a9e44fe99e8bd27f034698b9) by dark_igorek (https://sketchfab.com/dark_igorek) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

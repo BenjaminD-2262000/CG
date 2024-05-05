@@ -1,13 +1,12 @@
 #include "Model.h"
 #include "Landscape.h"
+#include <random>
 
 #define SCREEN_WIDTH 1000
 #define SCREEN_HEIGTH 1000
+#define RENDER_DISTANCE 100.0f
 
-const unsigned int width = 800;
-const unsigned int height = 800;
-std::vector <Vertex> createSun();
-std::vector <GLuint> createSunIndices();
+
 
 
 float skyboxVertices[] =
@@ -44,6 +43,9 @@ unsigned int skyboxIndices[] =
 	6, 2, 3
 };
 
+std::vector <glm::mat4> randomInstanceMatrix(unsigned int instanceCount, Landscape& LS);
+
+
 int main()
 {
 
@@ -77,6 +79,7 @@ int main()
 
 	// Generates Shader object using shaders default.vert and default.frag
 	Shader shaderProgram("default.vert", "default.frag");
+	Shader instanceShader("instanced.vert", "default.frag");
 
 	//Skybox Shader object
 	Shader skyboxShader("skybox.vert", "skybox.frag");
@@ -84,13 +87,17 @@ int main()
 
 	// Take care of all the light related things
 	glm::vec4 lightColor = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
-	glm::vec3 lightPos = glm::vec3(0.5f, 0.5f, 5.9f);
+	glm::vec3 lightPos = glm::vec3(0.5f, 12.0f, 5.9f);
 	glm::mat4 lightModel = glm::mat4(1.0f);
 	lightModel = glm::translate(lightModel, lightPos);
 
 	shaderProgram.Activate();
 	glUniform4f(glGetUniformLocation(shaderProgram.ID, "lightColor"), lightColor.x, lightColor.y, lightColor.z, lightColor.w);
 	glUniform3f(glGetUniformLocation(shaderProgram.ID, "lightPos"), lightPos.x, lightPos.y, lightPos.z);
+
+	instanceShader.Activate();
+	glUniform4f(glGetUniformLocation(instanceShader.ID, "lightColor"), lightColor.x, lightColor.y, lightColor.z, lightColor.w);
+	glUniform3f(glGetUniformLocation(instanceShader.ID, "lightPos"), lightPos.x, lightPos.y, lightPos.z);
 	
 	skyboxShader.Activate();
 	glUniform1i(glGetUniformLocation(skyboxShader.ID, "skybox"), 0);
@@ -103,21 +110,12 @@ int main()
 
 	Shader LightShader("light.vert", "light.frag");
 
-	std::vector<Vertex> sunVertices = createSun();
-	std::vector<GLuint> sunIndices = createSunIndices();
-	std::vector<Texture> sunTextures;
-	Texture sunTexture("recourses/Textures/sun.jpg", "diffuse", 0);
-	sunTextures.push_back(sunTexture);
-	Mesh sun(sunVertices, sunIndices, sunTextures);
 
 	// Enables the Depth Buffer
 	glEnable(GL_DEPTH_TEST);
 
 	// Creates camera object
 	Camera camera(SCREEN_WIDTH, SCREEN_HEIGTH, glm::vec3(0.0f, 0.0f, 2.0f));
-
-	Landscape LS("recourses/Heigtmaps/heightmap.png", 1);
-	Model model("models/bunny/scene.gltf");
 
 
 	// Create VAO, VBO, and EBO for the skybox
@@ -190,6 +188,18 @@ int main()
 		}
 	} 
 
+	unsigned int instanceCount = 100;
+
+	Landscape LS("recourses/Heigtmaps/heightmap.png", 1);
+
+	std::vector <glm::mat4> instanceMatrix = randomInstanceMatrix(instanceCount, LS);
+
+
+	Model model("models/frog/scene.gltf", &LS, instanceCount, instanceMatrix);
+	Model model2("models/bunny/scene.gltf", &LS);
+
+
+
 	// Main while loop
 	while (!glfwWindowShouldClose(window))
 	{
@@ -205,7 +215,9 @@ int main()
 
 		// Draw a model
 		LS.drawTerrain(landScapeShader, camera);
-		model.Draw(shaderProgram, camera);
+		model.Draw(instanceShader, camera);
+		model2.Draw(shaderProgram, camera, glm::vec2(0, 0));
+
 
 		// Since the cubemap will always have a depth of 1.0, we need that equal sign so it doesn't get discarded
 		glDepthFunc(GL_LEQUAL);
@@ -216,7 +228,7 @@ int main()
 		// We make the mat4 into a mat3 and then a mat4 again in order to get rid of the last row and column
 		// The last row and column affect the translation of the skybox (which we don't want to affect)
 		view = glm::mat4(glm::mat3(glm::lookAt(camera.Position, camera.Position + camera.Orientation, camera.Up)));
-		projection = glm::perspective(glm::radians(45.0f), (float)width / height, 0.1f, 100.0f);
+		projection = glm::perspective(glm::radians(45.0f), (float)SCREEN_WIDTH / SCREEN_HEIGTH, 0.1f, RENDER_DISTANCE);
 		glUniformMatrix4fv(glGetUniformLocation(skyboxShader.ID, "view"), 1, GL_FALSE, glm::value_ptr(view));
 		glUniformMatrix4fv(glGetUniformLocation(skyboxShader.ID, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
 
@@ -250,60 +262,41 @@ int main()
 	return 0;
 }
 
-
-std::vector <Vertex> createSun()
+float randf(float min, float max)
 {
-
-	GLfloat lightVertices[] =
-	{ //     COORDINATES     //
-		-0.1f, -0.1f,  0.1f,
-		-0.1f, -0.1f, -0.1f,
-		 0.1f, -0.1f, -0.1f,
-		 0.1f, -0.1f,  0.1f,
-		-0.1f,  0.1f,  0.1f,
-		-0.1f,  0.1f, -0.1f,
-		 0.1f,  0.1f, -0.1f,
-		 0.1f,  0.1f,  0.1f
-	};
-
-
-	std::vector<Vertex> vertices;
-
-	// Iterate through the lightVertices array and fill in the Vertex struct
-	for (int i = 0; i < sizeof(lightVertices) / sizeof(float); i += 3) {
-		Vertex vertex;
-		// Multiply each coordinate by 10 and assign it to the Position part of the vertex
-		vertex.Position.x = lightVertices[i] * 20.0f;
-		vertex.Position.y = lightVertices[i + 1] * 20.0f;
-		vertex.Position.z = lightVertices[i + 2] * 20.0f;
-		// Set the Color to (1, 1, 1)
-		vertex.Color = glm::vec3(1.0f, 1.0f, 1.0f);
-		// Set the Normal and TexUV to default values (0, 0)
-		vertex.Normal = glm::vec3(0.0f);
-		vertex.TexUV = glm::vec2(0.0f);
-		// Add the vertex to the vertices vector
-		vertices.push_back(vertex);
-	}
-	return vertices;
+	return min + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (max - min)));
 }
 
-std::vector <GLuint> createSunIndices() {
-	GLuint lightIndices[] =
+std::vector <glm::mat4> randomInstanceMatrix(unsigned int instanceCount, Landscape& LS)
+{
+	std::vector <glm::mat4> instanceMatrix;
+	for (unsigned int i = 0; i < instanceCount; i++)
 	{
-		0, 1, 2,
-		0, 2, 3,
-		0, 4, 7,
-		0, 7, 3,
-		3, 7, 6,
-		3, 6, 2,
-		2, 6, 5,
-		2, 5, 1,
-		1, 5, 4,
-		1, 4, 0,
-		4, 5, 6,
-		4, 6, 7
-	};
+		glm::vec3 tempTranslation;
+		glm::quat tempRotation;
+		glm::vec3 tempScale;
 
-	std::vector<GLuint> indices(lightIndices, lightIndices + sizeof(lightIndices) / sizeof(GLuint));
-	return indices;
+		tempTranslation.x = -100.0f + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (100.0f - (-100.0f))));
+		tempTranslation.z = -100.0f + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (100.0f - (-100.0f))));
+		tempTranslation.y = LS.getHeight(tempTranslation.x, tempTranslation.z);
+
+		float randomAngle = randf(0.0f, glm::two_pi<float>());
+		glm::vec3 yAxis = glm::vec3(0.0f, 1.0f, 0.0f);
+		tempRotation = glm::angleAxis(randomAngle, yAxis);
+
+		float randomScale = randf(0.01f, 0.05f);
+		tempScale = glm::vec3(randomScale, randomScale, randomScale);
+
+		glm::mat4 trans = glm::mat4(1.0f);
+		glm::mat4 rot = glm::mat4(1.0f);
+		glm::mat4 sca = glm::mat4(1.0f);
+
+		trans = glm::translate(trans , tempTranslation);
+		rot = glm::mat4_cast(tempRotation);
+		sca = glm::scale(sca, tempScale);
+
+		instanceMatrix.push_back(trans * rot * sca);
+	}
+	return instanceMatrix;
 }
+	

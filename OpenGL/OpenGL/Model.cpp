@@ -1,6 +1,6 @@
 #include"Model.h"
 
-Model::Model(const char* file)
+Model::Model(const char* file, Landscape* terrain)
 {
 	// Make a JSON object
 	std::string text = get_file_contents(file);
@@ -10,12 +10,34 @@ Model::Model(const char* file)
 	Model::file = file;
 	data = getData();
 
+	this->m_terrain = terrain;
+
+
+	// Traverse all nodes
+	traverseNode(0);
+}
+
+Model::Model(const char* file, Landscape* terrain, unsigned int instances, std::vector <glm::mat4> instanceMatrix)
+{
+	// Make a JSON object
+	std::string text = get_file_contents(file);
+	JSON = json::parse(text);
+
+	// Get the binary data
+	Model::file = file;
+	data = getData();
+
+	this->m_terrain = terrain;
+	m_instanceCount = instances;
+	m_instanceMatrix = instanceMatrix;
+
 	// Traverse all nodes
 	traverseNode(0);
 }
 
 void Model::Draw(Shader& shader, Camera& camera)
 {
+
 	// Go over all meshes and draw each one
 	for (unsigned int i = 0; i < meshes.size(); i++)
 	{
@@ -23,34 +45,67 @@ void Model::Draw(Shader& shader, Camera& camera)
 	}
 }
 
+
+void Model::Draw(Shader& shader, Camera& camera, glm::vec2 location2D)
+{
+	glm::vec3 translation = glm::vec3(0.0f, 0.0f, 0.0f);
+	glm::quat rotation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
+	glm::vec3 scale = glm::vec3(2.0f, 2.0f, 2.0f);
+	glm::vec3 location3D = glm::vec3(0.0f);
+	location3D.x = location2D.x;
+	location3D.z = location2D.y;
+	location3D.y = m_terrain->getHeight(location2D.x, location2D.y);
+
+	// Go over all meshes and draw each one
+	for (unsigned int i = 0; i < meshes.size(); i++)
+	{
+		float miny = meshes[i].calculateMinY();
+		translation.y = -miny;
+
+		meshes[i].Mesh::Draw(shader, camera, matricesMeshes[i], translation, rotation, scale, location3D);
+	}
+}
+
 void Model::loadMesh(unsigned int indMesh)
 {
 	// Get all accessor indices
-	unsigned int positionInd = JSON["meshes"][indMesh]["primitives"][0]["attributes"]["POSITION"];
-	unsigned int normalInd = JSON["meshes"][indMesh]["primitives"][0]["attributes"]["NORMAL"];
-	unsigned int textureInd = JSON["meshes"][indMesh]["primitives"][0]["attributes"]["TEXCOORD_0"];
-	unsigned int indicesInd = JSON["meshes"][indMesh]["primitives"][0]["indices"];
+	unsigned int posAccInd = JSON["meshes"][indMesh]["primitives"][0]["attributes"]["POSITION"];
+	unsigned int normalAccInd = JSON["meshes"][indMesh]["primitives"][0]["attributes"]["NORMAL"];
+	unsigned int texAccInd = JSON["meshes"][indMesh]["primitives"][0]["attributes"]["TEXCOORD_0"];
+	unsigned int indAccInd = JSON["meshes"][indMesh]["primitives"][0]["indices"];
 
 	// Use accessor indices to get all vertices components
-	std::vector<float> posVec = getFloats(JSON["accessors"][positionInd]);
+	std::vector<float> posVec = getFloats(JSON["accessors"][posAccInd]);
 	std::vector<glm::vec3> positions = groupFloatsVec3(posVec);
-	std::vector<float> normalVec = getFloats(JSON["accessors"][normalInd]);
+
+	std::vector<float> normalVec = getFloats(JSON["accessors"][normalAccInd]);
 	std::vector<glm::vec3> normals = groupFloatsVec3(normalVec);
-	std::vector<float> texVec = getFloats(JSON["accessors"][textureInd]);
+	std::vector<float> texVec = getFloats(JSON["accessors"][texAccInd]);
 	std::vector<glm::vec2> texUVs = groupFloatsVec2(texVec);
 
 	// Combine all the vertex components and also get the indices and textures
 	std::vector<Vertex> vertices = assembleVertices(positions, normals, texUVs);
-	std::vector<GLuint> indices = getIndices(JSON["accessors"][indicesInd]);
+	std::vector<GLuint> indices = getIndices(JSON["accessors"][indAccInd]);
 	std::vector<Texture> textures = getTextures();
 
 	// Combine the vertices, indices, and textures into a mesh
-	meshes.push_back(Mesh(vertices, indices, textures));
+	meshes.push_back(Mesh(vertices, indices, textures, m_instanceCount, m_instanceMatrix));
+}
+
+float Model::calculateMinY(const std::vector<glm::vec3>& positions)
+{
+	float minY = positions[0].y;
+	for (unsigned int i = 1; i < positions.size(); i++)
+	{
+		if (positions[i].y < minY)
+			minY = positions[i].y;
+	}
+	return minY;
 }
 
 void Model::traverseNode(unsigned int nextNode, glm::mat4 matrix)
 {
-
+	// Current node
 	json node = JSON["nodes"][nextNode];
 
 	// Get translation if it exists
@@ -62,6 +117,8 @@ void Model::traverseNode(unsigned int nextNode, glm::mat4 matrix)
 			transValues[i] = (node["translation"][i]);
 		translation = glm::make_vec3(transValues);
 	}
+
+
 	// Get quaternion if it exists
 	glm::quat rotation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
 	if (node.find("rotation") != node.end())
@@ -74,6 +131,7 @@ void Model::traverseNode(unsigned int nextNode, glm::mat4 matrix)
 			node["rotation"][2]
 		};
 		rotation = glm::make_quat(rotValues);
+
 	}
 	// Get scale if it exists
 	glm::vec3 scale = glm::vec3(1.0f, 1.0f, 1.0f);
@@ -122,7 +180,9 @@ void Model::traverseNode(unsigned int nextNode, glm::mat4 matrix)
 	if (node.find("children") != node.end())
 	{
 		for (unsigned int i = 0; i < node["children"].size(); i++)
-			traverseNode(node["children"][i], matNextNode);
+			if (node["children"][i] != 0) {
+				traverseNode(node["children"][i], matNextNode);
+			}
 	}
 }
 
@@ -328,4 +388,15 @@ std::vector<glm::vec4> Model::groupFloatsVec4(std::vector<float> floatVec)
 		vectors.push_back(glm::vec4(floatVec[i++], floatVec[i++], floatVec[i++], floatVec[i++]));
 	}
 	return vectors;
+}
+
+glm::vec3 Model::calculateAveragePosition(const std::vector<glm::vec3>& positions)
+{
+	glm::vec3 averagePosition(0.0f);
+	for (const auto& position : positions)
+	{
+		averagePosition += position;
+	}
+	averagePosition /= static_cast<float>(positions.size());
+	return averagePosition;
 }
