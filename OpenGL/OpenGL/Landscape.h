@@ -14,6 +14,8 @@ class Landscape
 private:
 	int m_width, m_height, m_nChannels, m_rezolution;
 	unsigned char* m_data;
+	float yScale = 64.0f / 256.0f, yShift = 16.0f;
+
 	std::vector<Vertex> m_vertices;
 	std::vector<GLuint> m_indices;
 	VAO m_VAO;
@@ -21,6 +23,7 @@ private:
 	Texture m_specular = Texture("recourses/Textures/rocks_spec.jpg", "specular", 1);
 
 	void generateVertices();
+	void calculateNormals();
 	void generateIndices();
 	void setupMesh();
 

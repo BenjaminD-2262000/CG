@@ -89,6 +89,9 @@
     <None Include="skybox.frag">
       <Filter>Resource Files\NewFilter1</Filter>
     </None>
+    <None Include="instanced.vert">
+      <Filter>Resource Files\NewFilter1</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Shader.h">
