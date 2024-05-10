@@ -89,6 +89,15 @@
     <None Include="skybox.frag">
       <Filter>Resource Files\NewFilter1</Filter>
     </None>
+    <None Include="instanced.vert">
+      <Filter>Resource Files\NewFilter1</Filter>
+    </None>
+    <None Include="crosshair.vert">
+      <Filter>Resource Files\NewFilter1</Filter>
+    </None>
+    <None Include="crosshair.frag">
+      <Filter>Resource Files\NewFilter1</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Shader.h">
@@ -101,9 +110,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="VAO.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Camera.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Texture.h">

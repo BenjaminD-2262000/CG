@@ -10,6 +10,7 @@
 
 #include "Shader.h"
 
+
 class Landscape;
 
 class Camera
@@ -38,7 +39,7 @@ public:
 	float verticalVelocity = 0.0f;
 	float jumpSpeed = 4.0f;
 
-	float cameraHeightOffset = 1.6f;
+	float cameraHeightOffset = 2.0f;
 
 	float gravity = 9.8f;
 
@@ -59,5 +60,10 @@ public:
 	void Inputs(GLFWwindow* window);
 
 	float GetHeightCameraPosition();
+
+	glm::vec2 calculateIntersectionPoint();
+
+	
+	
 };
 

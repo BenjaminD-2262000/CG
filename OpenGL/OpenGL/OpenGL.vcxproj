@@ -149,15 +149,17 @@
   <ItemGroup>
     <None Include="bunny\scene.bin" />
     <None Include="bunny\scene.gltf" />
+    <None Include="crosshair.frag" />
+    <None Include="crosshair.vert" />
     <None Include="default.frag" />
     <None Include="default.vert" />
+    <None Include="instanced.vert" />
     <None Include="light.frag" />
     <None Include="light.vert" />
     <None Include="skybox.frag" />
     <None Include="skybox.vert" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Camera.h" />
     <ClInclude Include="EBO.h" />
     <ClInclude Include="Landscape.h" />
     <ClInclude Include="Mesh.h" />
