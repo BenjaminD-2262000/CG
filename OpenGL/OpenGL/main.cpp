@@ -236,6 +236,50 @@ int main()
 	ShadowMap shadowMap(lightPos);
 	shadowMap.sendLightSpaceMatrix(shaderProgram);
 
+	//crosshair
+	// Create and bind a VAO
+	unsigned int crosshairVAO;
+	glGenVertexArrays(1, &crosshairVAO);
+	glBindVertexArray(crosshairVAO);
+
+	// Create and bind a VBO
+	unsigned int crosshairVBO;
+	glGenBuffers(1, &crosshairVBO);
+	glBindBuffer(GL_ARRAY_BUFFER, crosshairVBO);
+
+	// Fill the VBO with vertex data
+	glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), quadVertices, GL_STATIC_DRAW);
+
+	// Specify the vertex attributes
+	// Positions attribute
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), nullptr);
+	glEnableVertexAttribArray(0);
+	// Texture coordinates attribute
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5*sizeof(float), (void*)(3*sizeof(float)));
+	glEnableVertexAttribArray(1);
+
+	// Unbind the VAO and VBO
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindVertexArray(0);
+
+	// Load the crosshair texture
+	int crosshairWidth, crosshairHeight, crosshairChannels;
+	unsigned char* crosshairData = stbi_load("recourses/Textures/crosshair2.png", &crosshairWidth, &crosshairHeight, &crosshairChannels, 0);
+	if (!crosshairData) {
+		std::cerr << "Failed to load crosshair texture" << std::endl;
+		// Handle error
+	}
+
+	unsigned int crosshairTexture;
+	glGenTextures(1, &crosshairTexture);
+	glBindTexture(GL_TEXTURE_2D, crosshairTexture);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, crosshairWidth, crosshairHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, crosshairData);
+	glGenerateMipmap(GL_TEXTURE_2D);
+	stbi_image_free(crosshairData);
+
+	crosshairShader.Activate();
+	crosshairShader.setInt("crosshairTexture", 0);
+
 
 	// variable to keep track of time (gravity)
 	float lastFrame = 0.0f;
@@ -284,7 +328,6 @@ int main()
 
 		// Draw a model
 		LS.drawTerrain(landScapeShader, camera);
-		model3.Draw(shaderProgram, camera, glm::vec2(1, 1));
 		model.Draw(instanceShader, camera);
 		model2.Draw(shaderProgram, camera, glm::vec2(0, 0));
 		model3.Draw(instanceShader, camera);

@@ -101,6 +101,8 @@
     <None Include="shadow.frag">
       <Filter>Resource Files\NewFilter1</Filter>
     </None>
+    <None Include="crosshair.frag" />
+    <None Include="crosshair.vert" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Shader.h">
