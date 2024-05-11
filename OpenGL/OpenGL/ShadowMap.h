@@ -8,6 +8,7 @@
 class ShadowMap
 {
 	public:
+
 	ShadowMap(glm::vec3 lightPos);
 	void sendLightSpaceMatrix(Shader shader);
 	void bind(Shader shader);

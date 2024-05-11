@@ -46,6 +46,8 @@ public:
 
 	float previousTerrainHeight = 0.0f;
 
+	bool flashlight = false;
+	bool getFlashlight() { return flashlight; }
 
 	// Camera constructor to set up initial values
 	Camera(int width, int height, glm::vec3 position, Landscape& landscape);

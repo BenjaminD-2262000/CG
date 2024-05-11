@@ -152,6 +152,8 @@
     <None Include="bunny\scene.gltf" />
     <None Include="default.frag" />
     <None Include="default.vert" />
+    <None Include="framebuffer.frag" />
+    <None Include="framebuffer.vert" />
     <None Include="instanced.vert" />
     <None Include="light.frag" />
     <None Include="light.vert" />

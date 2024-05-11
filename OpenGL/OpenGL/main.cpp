@@ -44,7 +44,20 @@ unsigned int skyboxIndices[] =
 	6, 2, 3
 };
 
-std::vector <glm::mat4> randomInstanceMatrix(unsigned int instanceCount, Landscape& LS);
+//FRAMBUFFER
+float rectangleVertices[] =
+{
+	// Coords    // texCoords
+	 1.0f, -1.0f,  1.0f, 0.0f,
+	-1.0f, -1.0f,  0.0f, 0.0f,
+	-1.0f,  1.0f,  0.0f, 1.0f,
+
+	 1.0f,  1.0f,  1.0f, 1.0f,
+	 1.0f, -1.0f,  1.0f, 0.0f,
+	-1.0f,  1.0f,  0.0f, 1.0f
+};
+
+std::vector <glm::mat4> randomInstanceMatrix(unsigned int instanceCount, Landscape& LS, float minScale, float maxScale);
 
 
 int main()
@@ -81,6 +94,7 @@ int main()
 	// Generates Shader object using shaders default.vert and default.frag
 	Shader shaderProgram("default.vert", "default.frag");
 	Shader instanceShader("instanced.vert", "default.frag");
+	Shader framebufferShader("framebuffer.vert", "framebuffer.frag");
 
 	//Skybox Shader object
 	Shader skyboxShader("skybox.vert", "skybox.frag");
@@ -88,7 +102,7 @@ int main()
 
 	// Take care of all the light related things
 	glm::vec4 lightColor = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
-	glm::vec3 lightPos = glm::vec3(0.5f, 12.0f, 5.9f);
+	glm::vec3 lightPos = glm::vec3(0.0f, 9.0f, 0.0f);
 	glm::mat4 lightModel = glm::mat4(1.0f);
 	lightModel = glm::translate(lightModel, lightPos);
 
@@ -102,6 +116,9 @@ int main()
 	
 	skyboxShader.Activate();
 	glUniform1i(glGetUniformLocation(skyboxShader.ID, "skybox"), 0);
+
+	framebufferShader.Activate();
+	glUniform1i(glGetUniformLocation(framebufferShader.ID, "screenTexture"), 0);
 
 
 	Shader landScapeShader("terrain.vert", "terrain.frag");
@@ -188,15 +205,16 @@ int main()
 		}
 	}
 
-	unsigned int instanceCount = 100;
+	unsigned int instanceCount = 1000;
 
 	Landscape LS("recourses/Heigtmaps/heightmap.png", 1);
 	Camera camera(SCREEN_WIDTH, SCREEN_HEIGTH, glm::vec3(0.0f, 0.0f, 2.0f), LS);
-	std::vector <glm::mat4> instanceMatrix = randomInstanceMatrix(instanceCount, LS);
+	std::vector <glm::mat4> instanceMatrix = randomInstanceMatrix(instanceCount, LS, 1.0, 3.0);
+	std::vector <glm::mat4> instanceMatrix2 = randomInstanceMatrix(instanceCount, LS, 0.1, 0.9);
 
-	Model model3("models/fire/scene.gltf", &LS);
-	Model model("models/frog/scene.gltf", &LS, instanceCount, instanceMatrix);
-	Model model2("models/bunny/scene.gltf", &LS);
+	Model model3("models/bunny/scene.gltf", &LS);
+
+	Model model("models/tree/island_tree_01_1k.gltf", &LS, instanceCount, instanceMatrix);
 
 	ShadowMap shadowMap(lightPos);
 	shadowMap.sendLightSpaceMatrix(shaderProgram);
@@ -204,6 +222,54 @@ int main()
 	// variable to keep track of time (gravity)
 	float lastFrame = 0.0f;
 	// Main while loop
+
+
+
+	//FRAMBUFFER
+
+	// Prepare framebuffer rectangle VBO and VAO
+	unsigned int rectVAO, rectVBO;
+	glGenVertexArrays(1, &rectVAO);
+	glGenBuffers(1, &rectVBO);
+	glBindVertexArray(rectVAO);
+	glBindBuffer(GL_ARRAY_BUFFER, rectVBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(rectangleVertices), &rectangleVertices, GL_STATIC_DRAW);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
+
+	// Create Frame Buffer Object
+	unsigned int FBO;
+	glGenFramebuffers(1, &FBO);
+	glBindFramebuffer(GL_FRAMEBUFFER, FBO);
+
+	// Create Framebuffer Texture
+	unsigned int framebufferTexture;
+	glGenTextures(1, &framebufferTexture);
+	glBindTexture(GL_TEXTURE_2D, framebufferTexture);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, SCREEN_WIDTH, SCREEN_HEIGTH, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE); // Prevents edge bleeding
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE); // Prevents edge bleeding
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, framebufferTexture, 0);
+
+	// Create Render Buffer Object
+	unsigned int RBO;
+	glGenRenderbuffers(1, &RBO);
+	glBindRenderbuffer(GL_RENDERBUFFER, RBO);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, SCREEN_WIDTH, SCREEN_HEIGTH);
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, RBO);
+
+
+	// Error checking framebuffer
+	auto fboStatus = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+	if (fboStatus != GL_FRAMEBUFFER_COMPLETE)
+		std::cout << "Framebuffer error: " << fboStatus << std::endl;
+
+
+
 	while (!glfwWindowShouldClose(window))
 	{
 		// Preparations for the Shadow Map
@@ -221,6 +287,9 @@ int main()
 		// Switch back to the default viewport
 		glViewport(0, 0, SCREEN_WIDTH, SCREEN_HEIGTH);
 		glViewport(0, 0, SCREEN_WIDTH, SCREEN_HEIGTH);
+
+
+		glBindFramebuffer(GL_FRAMEBUFFER, FBO);
 
 		// Specify the color of the background
 		glClearColor(0.07f, 0.13f, 0.17f, 1.0f);
@@ -243,14 +312,19 @@ int main()
 
 		//send lightSpaceMatrix to shader
 		shadowMap.sendLightSpaceMatrix(shaderProgram);
+		shadowMap.sendLightSpaceMatrix(instanceShader);
+		shadowMap.sendLightSpaceMatrix(landScapeShader);
 		//bind shadow map to shader
 		shadowMap.bind(shaderProgram);
+		shadowMap.bind(instanceShader);
+		shadowMap.bind(landScapeShader);
 
 		// Draw a model
 		LS.drawTerrain(landScapeShader, camera);
-		model3.Draw(shaderProgram, camera, glm::vec2(1, 1));
+
 		model.Draw(instanceShader, camera);
-		model2.Draw(shaderProgram, camera, glm::vec2(0, 0));
+
+		model3.Draw(shaderProgram, camera, glm::vec2(1, 1));
 
 
 		// Since the cubemap will always have a depth of 1.0, we need that equal sign so it doesn't get discarded
@@ -277,6 +351,12 @@ int main()
 		// Switch back to the normal depth function
 		glDepthFunc(GL_LESS);
 
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		framebufferShader.Activate();
+		glBindVertexArray(rectVAO);
+		glDisable(GL_DEPTH_TEST);
+		glBindTexture(GL_TEXTURE_2D, framebufferTexture);
+		glDrawArrays(GL_TRIANGLES, 0, 6);
 
 		// Swap the back buffer with the front buffer
 		glfwSwapBuffers(window);
@@ -301,7 +381,7 @@ float randf(float min, float max)
 	return min + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (max - min)));
 }
 
-std::vector <glm::mat4> randomInstanceMatrix(unsigned int instanceCount, Landscape& LS)
+std::vector <glm::mat4> randomInstanceMatrix(unsigned int instanceCount, Landscape& LS, float minScale, float maxScale)
 {
 	std::vector <glm::mat4> instanceMatrix;
 	for (unsigned int i = 0; i < instanceCount; i++)
@@ -318,7 +398,7 @@ std::vector <glm::mat4> randomInstanceMatrix(unsigned int instanceCount, Landsca
 		glm::vec3 yAxis = glm::vec3(0.0f, 1.0f, 0.0f);
 		tempRotation = glm::angleAxis(randomAngle, yAxis);
 
-		float randomScale = randf(0.01f, 0.05f);
+		float randomScale = randf(minScale, maxScale);
 		tempScale = glm::vec3(randomScale, randomScale, randomScale);
 
 		glm::mat4 trans = glm::mat4(1.0f);

@@ -19,8 +19,10 @@ private:
 	std::vector<Vertex> m_vertices;
 	std::vector<GLuint> m_indices;
 	VAO m_VAO;
-	Texture m_texture = Texture("recourses/Textures/rocks.jpg", "diffuse", 0);
-	Texture m_specular = Texture("recourses/Textures/rocks_spec.jpg", "specular", 1);
+	Texture m_textureGround = Texture("recourses/Textures/mud.jpg", "diffuse", 0);
+	Texture m_specularGround = Texture("recourses/Textures/mud_spec.jpg", "specular", 0);
+	Texture m_textureMountain = Texture("recourses/Textures/mountain.jpg", "diffuse", 1);
+	Texture m_specularMountain = Texture("recourses/Textures/mountain_spec.jpg", "specular", 1);
 
 	void generateVertices();
 	void calculateNormals();

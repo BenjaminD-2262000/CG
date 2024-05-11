@@ -109,13 +109,21 @@ void Landscape::drawTerrain(Shader& shader, Camera& camera)
 	glm::mat4 model = glm::mat4(1.0f);
 	glUniformMatrix4fv(glGetUniformLocation(shader.ID, "model"), 1, GL_FALSE, glm::value_ptr(model));
 
+	//set the light properties
+	glUniform1i(glGetUniformLocation(shader.ID, "flashlightOn"), camera.getFlashlight());
+
+
+
 	int numStrips = (m_height - 1) / m_rezolution;
 	int numTrisPerStrip = (m_width / m_rezolution) * 2 - 2;
 
 	//add grass texture
-	m_texture.texUnit(shader, "diffuse0", 0);
-	m_specular.texUnit(shader, "specular0", 0);
-	m_texture.Bind();
+	m_textureGround.texUnit(shader, "diffuse0", 0);
+	m_specularGround.texUnit(shader, "specular0", 0);
+	m_textureMountain.texUnit(shader, "diffuse1", 1);
+	m_specularMountain.texUnit(shader, "specular1", 1);
+	m_textureGround.Bind();
+	m_textureMountain.Bind();
 
 	
 	for (unsigned int strip = 0; strip < numStrips; ++strip)

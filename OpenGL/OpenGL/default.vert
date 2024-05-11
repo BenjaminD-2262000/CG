@@ -19,6 +19,10 @@ out vec3 color;
 // Outputs the texture coordinates to the Fragment Shader
 out vec2 texCoord;
 
+out mat4 aRotation;
+//outputs the player position to the fragment shader
+out vec3 playerPos;
+
 out vec4 fragPosLight;
 
 // Imports the camera matrix from the main function
@@ -40,14 +44,18 @@ uniform vec3 location;
 void main()
 {
 	// calculates current position
-	crntPos = vec3(model * translation * -rotation * scale * vec4(aPos, 1.0f)) + location;	
+	crntPos = vec3(model * translation * rotation * scale * vec4(aPos, 1.0f)) + location;
 	Normal = aNormal;
 	// Assigns the colors from the Vertex Data to "color"
 	color = aColor;
 	// Assigns the texture coordinates from the Vertex Data to "texCoord"
 	texCoord = mat2(0.0, -1.0, 1.0, 0.0) * aTex;
-	fragPosLight = lightProjection * vec4(crntPos, 1.0);
+	// Modify the generation of fragPosLight in the vertex shader to include rotation
+	fragPosLight = lightProjection * rotation * vec4(crntPos, 1.0);
 
+	aRotation = rotation;
 	// Outputs the positions/coordinates of all vertices
 	gl_Position = camMatrix * vec4(crntPos, 1.0);
+
+	playerPos = vec3(camMatrix * vec4(crntPos, 1.0));
 }
