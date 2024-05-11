@@ -290,7 +290,7 @@ int main()
 
 		// Draw scene for shadow map
 		Shader shadowShader = shadowMap.getShader();
-		model.Draw(shadowShader, camera);
+		model2.Draw(shadowShader, camera);
 		LS.drawTerrain(shadowShader, camera);
 
 
@@ -326,8 +326,8 @@ int main()
 
 		// Draw a model
 		LS.drawTerrain(landScapeShader, camera);
-		model.Draw(instanceShader, camera);
 		model2.Draw(shaderProgram, camera, glm::vec2(0, 0));
+		model.Draw(instanceShader, camera);
 		model3.Draw(instanceShader, camera);
 
 		
@@ -431,9 +431,13 @@ std::vector <glm::mat4> randomInstanceMatrix(unsigned int instanceCount, Landsca
 		glm::mat4 rot = glm::mat4(1.0f);
 		glm::mat4 sca = glm::mat4(1.0f);
 
-		trans = glm::translate(trans , tempTranslation);
+		trans = glm::translate(trans, tempTranslation);
 		rot = glm::mat4_cast(tempRotation);
 		sca = glm::scale(sca, tempScale);
+
+	}
+	return instanceMatrix;
+}
 //instanceMatrix for placed objects (not random)
 std::vector<glm::mat4> createInstanceMatrix(const std::vector<glm::vec2>& positions, Landscape& LS)
 {
@@ -443,9 +447,6 @@ std::vector<glm::mat4> createInstanceMatrix(const std::vector<glm::vec2>& positi
 		glm::vec3 tempTranslation(position.x, 0.0f, position.y);
 		tempTranslation.y = LS.getHeight(tempTranslation.x, tempTranslation.z);
 
-		instanceMatrix.push_back(trans * rot * sca);
-	}
-	return instanceMatrix;
 		glm::quat tempRotation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f); // No rotation
 
 		glm::vec3 tempScale = glm::vec3(1.0f, 1.0f, 1.0f); // No scaling
