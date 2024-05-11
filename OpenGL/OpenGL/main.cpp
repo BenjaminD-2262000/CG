@@ -1,11 +1,13 @@
 #include "Model.h"
 #include "Landscape.h"
+#include <random>
+#include "ShadowMap.h"
 
 #define SCREEN_WIDTH 1000
 #define SCREEN_HEIGTH 1000
+#define RENDER_DISTANCE 100.0f
 
-const unsigned int width = 800;
-const unsigned int height = 800;
+
 
 
 float skyboxVertices[] =
@@ -58,6 +60,9 @@ std::vector <glm::mat4> randomInstanceMatrix(unsigned int instanceCount, Landsca
 std::vector <glm::mat4> createInstanceMatrix(const std::vector<glm::vec2>& positions, Landscape& LS);
 
 
+std::vector <glm::mat4> randomInstanceMatrix(unsigned int instanceCount, Landscape& LS);
+
+
 int main()
 {
 
@@ -102,7 +107,7 @@ int main()
 
 	// Take care of all the light related things
 	glm::vec4 lightColor = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
-	glm::vec3 lightPos = glm::vec3(0.5f, 0.5f, 5.9f);
+	glm::vec3 lightPos = glm::vec3(0.5f, 12.0f, 5.9f);
 	glm::mat4 lightModel = glm::mat4(1.0f);
 	lightModel = glm::translate(lightModel, lightPos);
 
@@ -128,13 +133,12 @@ int main()
 	glUniform3f(glGetUniformLocation(landScapeShader.ID, "lightPos"), lightPos.x, lightPos.y, lightPos.z);
 
 	Shader LightShader("light.vert", "light.frag");
-	
+
+
 	// Enables the Depth Buffer
 	glEnable(GL_DEPTH_TEST);
 
-
-
-	
+	// Creates camera object
 
 
 	// Create VAO, VBO, and EBO for the skybox
@@ -268,6 +272,8 @@ int main()
 
 
 
+	ShadowMap shadowMap(lightPos);
+	shadowMap.sendLightSpaceMatrix(shaderProgram);
 	// variable to keep track of time (gravity)
 	float lastFrame = 0.0f;
 
@@ -278,10 +284,28 @@ int main()
 	// Main while loop
 	while (!glfwWindowShouldClose(window))
 	{
+		// Preparations for the Shadow Map
+		shadowMap.drawShadows(model, camera);
+
+
+		// Draw scene for shadow map
+		Shader shadowShader = shadowMap.getShader();
+		model.Draw(shadowShader, camera);
+		LS.drawTerrain(shadowShader, camera);
+
+
+		// Switch back to the default framebuffer
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		// Switch back to the default viewport
+		glViewport(0, 0, SCREEN_WIDTH, SCREEN_HEIGTH);
+		glViewport(0, 0, SCREEN_WIDTH, SCREEN_HEIGTH);
+
 		// Specify the color of the background
 		glClearColor(0.07f, 0.13f, 0.17f, 1.0f);
 		// Clean the back buffer and depth buffer
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		glEnable(GL_DEPTH_TEST);
 
 		// Handles camera inputs
 		camera.Inputs(window);
@@ -294,6 +318,11 @@ int main()
 
 		// Updates and exports the camera matrix to the Vertex Shader
 		camera.updateMatrix(45.0f, 0.1f, 300.0f);
+
+		//send lightSpaceMatrix to shader
+		shadowMap.sendLightSpaceMatrix(shaderProgram);
+		//bind shadow map to shader
+		shadowMap.bind(shaderProgram);
 
 		// Draw a model
 		LS.drawTerrain(landScapeShader, camera);
@@ -322,7 +351,7 @@ int main()
 		// We make the mat4 into a mat3 and then a mat4 again in order to get rid of the last row and column
 		// The last row and column affect the translation of the skybox (which we don't want to affect)
 		view = glm::mat4(glm::mat3(glm::lookAt(camera.Position, camera.Position + camera.Orientation, camera.Up)));
-		projection = glm::perspective(glm::radians(45.0f), (float)width / height, 0.1f, 100.0f);
+		projection = glm::perspective(glm::radians(45.0f), (float)SCREEN_WIDTH / SCREEN_HEIGTH, 0.1f, RENDER_DISTANCE);
 		glUniformMatrix4fv(glGetUniformLocation(skyboxShader.ID, "view"), 1, GL_FALSE, glm::value_ptr(view));
 		glUniformMatrix4fv(glGetUniformLocation(skyboxShader.ID, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
 
@@ -373,45 +402,38 @@ int main()
 	return 0;
 }
 
+float randf(float min, float max)
+{
+	return min + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (max - min)));
+}
 
-	float randf(float min, float max)
+std::vector <glm::mat4> randomInstanceMatrix(unsigned int instanceCount, Landscape& LS)
+{
+	std::vector <glm::mat4> instanceMatrix;
+	for (unsigned int i = 0; i < instanceCount; i++)
 	{
-		return min + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (max - min)));
-	}
+		glm::vec3 tempTranslation;
+		glm::quat tempRotation;
+		glm::vec3 tempScale;
 
-	std::vector <glm::mat4> randomInstanceMatrix(unsigned int instanceCount, Landscape & LS)
-	{
-		std::vector <glm::mat4> instanceMatrix;
-		for (unsigned int i = 0; i < instanceCount; i++)
-		{
-			glm::vec3 tempTranslation;
-			glm::quat tempRotation;
-			glm::vec3 tempScale;
+		tempTranslation.x = -100.0f + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (100.0f - (-100.0f))));
+		tempTranslation.z = -100.0f + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (100.0f - (-100.0f))));
+		tempTranslation.y = LS.getHeight(tempTranslation.x, tempTranslation.z);
 
-			tempTranslation.x = -100.0f + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (100.0f - (-100.0f))));
-			tempTranslation.z = -100.0f + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (100.0f - (-100.0f))));
-			tempTranslation.y = LS.getHeight(tempTranslation.x, tempTranslation.z);
+		float randomAngle = randf(0.0f, glm::two_pi<float>());
+		glm::vec3 yAxis = glm::vec3(0.0f, 1.0f, 0.0f);
+		tempRotation = glm::angleAxis(randomAngle, yAxis);
 
-			float randomAngle = randf(0.0f, glm::two_pi<float>());
-			glm::vec3 yAxis = glm::vec3(0.0f, 1.0f, 0.0f);
-			tempRotation = glm::angleAxis(randomAngle, yAxis);
+		float randomScale = randf(0.01f, 0.05f);
+		tempScale = glm::vec3(randomScale, randomScale, randomScale);
 
-			float randomScale = randf(0.01f, 0.05f);
-			tempScale = glm::vec3(randomScale, randomScale, randomScale);
+		glm::mat4 trans = glm::mat4(1.0f);
+		glm::mat4 rot = glm::mat4(1.0f);
+		glm::mat4 sca = glm::mat4(1.0f);
 
-			glm::mat4 trans = glm::mat4(1.0f);
-			glm::mat4 rot = glm::mat4(1.0f);
-			glm::mat4 sca = glm::mat4(1.0f);
-
-			trans = glm::translate(trans, tempTranslation);
-			rot = glm::mat4_cast(tempRotation);
-			sca = glm::scale(sca, tempScale);
-
-			instanceMatrix.push_back(trans * rot * sca);
-		}
-		return instanceMatrix;
-	}
-
+		trans = glm::translate(trans , tempTranslation);
+		rot = glm::mat4_cast(tempRotation);
+		sca = glm::scale(sca, tempScale);
 //instanceMatrix for placed objects (not random)
 std::vector<glm::mat4> createInstanceMatrix(const std::vector<glm::vec2>& positions, Landscape& LS)
 {
@@ -421,6 +443,9 @@ std::vector<glm::mat4> createInstanceMatrix(const std::vector<glm::vec2>& positi
 		glm::vec3 tempTranslation(position.x, 0.0f, position.y);
 		tempTranslation.y = LS.getHeight(tempTranslation.x, tempTranslation.z);
 
+		instanceMatrix.push_back(trans * rot * sca);
+	}
+	return instanceMatrix;
 		glm::quat tempRotation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f); // No rotation
 
 		glm::vec3 tempScale = glm::vec3(1.0f, 1.0f, 1.0f); // No scaling
