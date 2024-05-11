@@ -43,7 +43,21 @@ unsigned int skyboxIndices[] =
 	6, 2, 3
 };
 
+float quadVertices[] = {
+	// Positions      // Texture coordinates
+	-0.5f,  0.5f, 0.0f,  0.0f, 1.0f, // Top-left
+	-0.5f, -0.5f, 0.0f,  0.0f, 0.0f, // Bottom-left
+	 0.5f, -0.5f, 0.0f,  1.0f, 0.0f, // Bottom-right
+
+	-0.5f,  0.5f, 0.0f,  0.0f, 1.0f, // Top-left
+	 0.5f, -0.5f, 0.0f,  1.0f, 0.0f, // Bottom-right
+	 0.5f,  0.5f, 0.0f,  1.0f, 1.0f  // Top-right
+};
+
+
 std::vector <glm::mat4> randomInstanceMatrix(unsigned int instanceCount, Landscape& LS);
+std::vector <glm::mat4> createInstanceMatrix(const std::vector<glm::vec2>& positions, Landscape& LS);
+
 
 
 int main()
@@ -80,9 +94,14 @@ int main()
 	// Generates Shader object using shaders default.vert and default.frag
 	Shader shaderProgram("default.vert", "default.frag");
 	Shader instanceShader("instanced.vert", "default.frag");
+	Shader instanceShader2("instanced.vert", "default.frag");
+
 
 	//Skybox Shader object
 	Shader skyboxShader("skybox.vert", "skybox.frag");
+
+	Shader crosshairShader("crosshair.vert", "crosshair.frag");
+
 
 
 	// Take care of all the light related things
@@ -98,6 +117,11 @@ int main()
 	instanceShader.Activate();
 	glUniform4f(glGetUniformLocation(instanceShader.ID, "lightColor"), lightColor.x, lightColor.y, lightColor.z, lightColor.w);
 	glUniform3f(glGetUniformLocation(instanceShader.ID, "lightPos"), lightPos.x, lightPos.y, lightPos.z);
+
+	instanceShader2.Activate();
+	glUniform4f(glGetUniformLocation(instanceShader2.ID, "lightColor"), lightColor.x, lightColor.y, lightColor.z, lightColor.w);
+	glUniform3f(glGetUniformLocation(instanceShader2.ID, "lightPos"), lightPos.x, lightPos.y, lightPos.z);
+
 	
 	skyboxShader.Activate();
 	glUniform1i(glGetUniformLocation(skyboxShader.ID, "skybox"), 0);
@@ -162,7 +186,11 @@ int main()
 	for (unsigned int i = 0; i < 6; i++)
 	{
 		int width, height, nrChannels;
+		if (i == 0) { stbi_set_flip_vertically_on_load(true); }
+
 		unsigned char* data = stbi_load(facesCubemap[i].c_str(), &width, &height, &nrChannels, 0);
+		stbi_set_flip_vertically_on_load(false);
+
 		if (data)
 		{
 			stbi_set_flip_vertically_on_load(false);
@@ -193,9 +221,61 @@ int main()
 	Camera camera(SCREEN_WIDTH, SCREEN_HEIGTH, glm::vec3(0.0f, 0.0f, 2.0f), LS);
 	std::vector <glm::mat4> instanceMatrix = randomInstanceMatrix(instanceCount, LS);
 
+	unsigned int placedInstances = 0;
+	std::vector <glm::vec2> positions;
+	std::vector <glm::mat4> instanceMatrix2 = createInstanceMatrix(positions, LS);
+
+	Model model3("models/bunny/scene.gltf", &LS, placedInstances, instanceMatrix2);
+
+
 
 	Model model("models/frog/scene.gltf", &LS, instanceCount, instanceMatrix);
 	Model model2("models/bunny/scene.gltf", &LS);
+
+	// Create and bind a VAO
+	unsigned int crosshairVAO;
+	glGenVertexArrays(1, &crosshairVAO);
+	glBindVertexArray(crosshairVAO);
+
+	// Create and bind a VBO
+	unsigned int crosshairVBO;
+	glGenBuffers(1, &crosshairVBO);
+	glBindBuffer(GL_ARRAY_BUFFER, crosshairVBO);
+
+	// Fill the VBO with vertex data
+	glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), quadVertices, GL_STATIC_DRAW);
+
+	// Specify the vertex attributes
+	// Positions attribute
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+	// Texture coordinates attribute
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);
+
+	// Unbind the VAO and VBO
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindVertexArray(0);
+
+	// Load the crosshair texture
+	int crosshairWidth, crosshairHeight, crosshairChannels;
+	unsigned char* crosshairData = stbi_load("recourses/Textures/crosshair2.png", &crosshairWidth, &crosshairHeight, &crosshairChannels, 0);
+	if (!crosshairData) {
+		std::cerr << "Failed to load crosshair texture" << std::endl;
+		// Handle error
+	}
+
+	unsigned int crosshairTexture;
+	glGenTextures(1, &crosshairTexture);
+	glBindTexture(GL_TEXTURE_2D, crosshairTexture);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, crosshairWidth, crosshairHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, crosshairData);
+	glGenerateMipmap(GL_TEXTURE_2D);
+	stbi_image_free(crosshairData);
+
+	crosshairShader.Activate();
+	crosshairShader.setInt("crosshairTexture", 0);
+
+
 
 
 
@@ -225,6 +305,17 @@ int main()
 		LS.drawTerrain(landScapeShader, camera);
 		model.Draw(instanceShader, camera);
 		model2.Draw(shaderProgram, camera, glm::vec2(0, 0));
+		model3.Draw(instanceShader, camera);
+
+		int mouseButtonState = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT);
+
+		if (mouseButtonState == 1) {
+			glm::vec2 intersectionPoint = camera.calculateIntersectionPoint();
+			positions.push_back(intersectionPoint);
+			instanceMatrix2 = createInstanceMatrix(positions, LS);
+			model3.updateInstanceData(instanceMatrix2.size(), instanceMatrix2);
+		}
+
 
 
 		// Since the cubemap will always have a depth of 1.0, we need that equal sign so it doesn't get discarded
@@ -251,6 +342,21 @@ int main()
 		// Switch back to the normal depth function
 		glDepthFunc(GL_LESS);
 
+		crosshairShader.Activate();
+		crosshairShader.setInt("crosshairTexture", 0);
+		crosshairShader.setFloat("scale", 0.1f);
+		// Bind the crosshair texture to texture unit 0
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, crosshairTexture);
+
+		// Draw the crosshair quad
+		glBindVertexArray(crosshairVAO); // Bind the VAO containing the quad geometry
+		glDrawArrays(GL_TRIANGLES, 0, 6); // Assuming the quad consists of two triangles (6 vertices)
+
+		// Clean up
+		glBindVertexArray(0); // Unbind the VAO
+
+
 
 		// Swap the back buffer with the front buffer
 		glfwSwapBuffers(window);
@@ -263,6 +369,7 @@ int main()
 	// Delete all the objects we've created
 	shaderProgram.Delete();
 	skyboxShader.Delete();
+	crosshairShader.Delete();
 	// Delete window before ending the program
 	glfwDestroyWindow(window);
 	// Terminate GLFW before ending the program
@@ -302,6 +409,28 @@ std::vector <glm::mat4> randomInstanceMatrix(unsigned int instanceCount, Landsca
 		trans = glm::translate(trans , tempTranslation);
 		rot = glm::mat4_cast(tempRotation);
 		sca = glm::scale(sca, tempScale);
+
+		instanceMatrix.push_back(trans * rot * sca);
+	}
+	return instanceMatrix;
+}
+
+//instanceMatrix for placed objects (not random)
+std::vector<glm::mat4> createInstanceMatrix(const std::vector<glm::vec2>& positions, Landscape& LS)
+{
+	std::vector<glm::mat4> instanceMatrix;
+	for (const glm::vec2& position : positions)
+	{
+		glm::vec3 tempTranslation(position.x, 0.0f, position.y);
+		tempTranslation.y = LS.getHeight(tempTranslation.x, tempTranslation.z);
+
+		glm::quat tempRotation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f); // No rotation
+
+		glm::vec3 tempScale = glm::vec3(1.0f, 1.0f, 1.0f); // No scaling
+
+		glm::mat4 trans = glm::translate(glm::mat4(1.0f), tempTranslation);
+		glm::mat4 rot = glm::mat4_cast(tempRotation);
+		glm::mat4 sca = glm::scale(glm::mat4(1.0f), tempScale);
 
 		instanceMatrix.push_back(trans * rot * sca);
 	}

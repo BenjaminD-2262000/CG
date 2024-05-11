@@ -400,3 +400,9 @@ glm::vec3 Model::calculateAveragePosition(const std::vector<glm::vec3>& position
 	averagePosition /= static_cast<float>(positions.size());
 	return averagePosition;
 }
+
+void Model::updateInstanceData(unsigned int newCount, const std::vector<glm::mat4>& newMatrix) {
+	m_instanceCount = newCount;
+	m_instanceMatrix = newMatrix;
+}
+

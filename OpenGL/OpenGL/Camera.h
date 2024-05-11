@@ -59,5 +59,6 @@ public:
 	void Inputs(GLFWwindow* window);
 
 	float GetHeightCameraPosition();
+	glm::vec2 calculateIntersectionPoint();
 };
 

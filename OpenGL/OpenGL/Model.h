@@ -17,6 +17,8 @@ public:
 
 	void Draw(Shader& shader, Camera& camera);
 	void Draw(Shader& shader, Camera& camera, glm::vec2 location);
+	void updateInstanceData(unsigned int newCount, const std::vector<glm::mat4>& newMatrix);
+
 
 
 private:
