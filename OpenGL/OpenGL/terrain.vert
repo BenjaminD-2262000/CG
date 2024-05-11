@@ -11,7 +11,7 @@ layout (location = 3) in vec2 aTex;
 
 // Outputs
 out float Height;
-out vec3 Position;
+out vec3 crntPos;
 out vec3 v_Color;
 out vec2 texCoord;
 out vec3 Normal;
@@ -24,7 +24,7 @@ uniform mat4 model;
 void main()
 {
 	Height = aPos.y;
-	Position = (vec4(aPos, 1.0)).xyz;
+	crntPos = (vec4(aPos, 1.0)).xyz;
 	v_Color = vec3(1.0f,1.0f,1.0f);
 	gl_Position =  model * camMatrix * vec4(aPos, 1.0f);
 	texCoord = aTex;
