@@ -8,6 +8,7 @@
 #include<glm/gtx/rotate_vector.hpp>
 #include<glm/gtx/vector_angle.hpp>
 
+
 #include "Shader.h"
 
 class Landscape;
@@ -47,6 +48,8 @@ public:
 	float previousTerrainHeight = 0.0f;
 
 	bool flashlight = false;
+	bool E_pressed = false;
+
 	bool getFlashlight() { return flashlight; }
 
 	// Camera constructor to set up initial values

@@ -36,8 +36,8 @@ vec4 pointLight()
 
 	// intensity of light with respect to distance
 	float dist = length(lightVec);
-	float a = 0.5;
-	float b = 0.7;
+	float a = 0.1;
+	float b = 0.05;
 	float inten = 1.0f / (a * dist * dist + b * dist + 1.0f);
 
 	// ambient lighting
@@ -137,6 +137,7 @@ vec4 direcLight()
 
 vec4 spotLight()
 {
+	vec4 flashLightColor = vec4(0.9f, 0.9f, 0.0f, 1.0f);
 	// controls how big the area that is lit up is
 	float outerCone = 0.60f;
 	float innerCone = 0.65f;
@@ -159,8 +160,20 @@ vec4 spotLight()
 	// calculates the intensity of the crntPos based on its angle to the center of the light cone
 	float angle = dot(vec3(0.0f, -1.0f, 0.0f), -lightDirection);
 	float inten = clamp((angle - outerCone) / (innerCone - outerCone), 0.0f, 1.0f);
+	    // Define a threshold height for texture switching
+    float thresholdHeight = 13.001f;
 
-	return (texture(diffuse0, texCoord) * (diffuse * inten + ambient) + texture(specular0, texCoord).r * specular * inten) * lightColor;
+    // Define a random factor (range from 0.0 to 1.5f)
+    float randomFactor = fract(sin(dot(Position, vec3(12.9898, 78.233, 45.543))) * 43758.5453) * 1.5f;
+
+    // Adjust the threshold height based on the random factor
+    float adjustedThreshold = thresholdHeight + randomFactor;
+
+    // Select the texture based on the adjusted threshold height
+    if (Height < adjustedThreshold)
+		return (texture(diffuse0, texCoord) * (diffuse * inten + ambient) + texture(specular0, texCoord).r * specular * inten) * flashLightColor;
+	else
+		return (texture(diffuse1, texCoord) * (diffuse * inten + ambient) + texture(specular1, texCoord).r * specular * inten) * flashLightColor;
 }
 void main()
 {

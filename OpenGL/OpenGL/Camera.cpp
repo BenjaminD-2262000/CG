@@ -66,8 +66,12 @@ void Camera::Inputs(GLFWwindow* window)
 	}
 	if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
 	{
-
+		E_pressed = true;
+	}
+	else if (glfwGetKey(window, GLFW_KEY_E) == GLFW_RELEASE && E_pressed)
+	{
 		flashlight = !flashlight;
+		E_pressed = false;
 	}
 
 

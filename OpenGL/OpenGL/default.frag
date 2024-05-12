@@ -40,8 +40,8 @@ vec4 pointLight()
 
 	// intensity of light with respect to distance
 	float dist = length(lightVec);
-	float a = 0.5;
-	float b = 0.7;
+	float a = 0.01;
+	float b = 0.005;
 	float inten = 1.0f / (a * dist * dist + b * dist + 1.0f);
 
 	// ambient lighting
@@ -120,6 +120,7 @@ vec4 direcLight()
 
 vec4 flashlight()
 {
+    vec4 flashLightColor = vec4(0.9f, 0.9f, 0.0f, 1.0f);
     // controls how big the area that is lit up is
 	float outerCone = 0.60f;
 	float innerCone = 0.65f;
@@ -143,7 +144,7 @@ vec4 flashlight()
     float angle = dot(vec3(0.0f, -1.0f, 0.0f), -lightDirection);
     float inten = clamp((angle - outerCone) / (innerCone - outerCone), 0.0f, 1.0f);
 
-    return (texture(diffuse0, texCoord) * (diffuse * inten + ambient) + texture(specular0, texCoord).r * specular * inten) * lightColor;
+    return (texture(diffuse0, texCoord) * (diffuse * inten + ambient) + texture(specular0, texCoord).r * specular * inten) * flashLightColor;
 }
 
 void main()

@@ -99,10 +99,13 @@ int main()
 	//Skybox Shader object
 	Shader skyboxShader("skybox.vert", "skybox.frag");
 
+	Landscape LS("recourses/Heigtmaps/heightmap.png", 1);
+
 
 	// Take care of all the light related things
-	glm::vec4 lightColor = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
-	glm::vec3 lightPos = glm::vec3(0.0f, 9.0f, 0.0f);
+    glm::vec4 lightColor = glm::vec4(1.0f, 0.5f, 0.0f, 1.0f);
+    glm::vec3 lightPos = glm::vec3(0.0f, 9.0f, 0.0f);
+	lightPos.y = LS.getHeight(lightPos.x, lightPos.z) + 1.0f;
 	glm::mat4 lightModel = glm::mat4(1.0f);
 	lightModel = glm::translate(lightModel, lightPos);
 
@@ -126,7 +129,9 @@ int main()
 	glUniform4f(glGetUniformLocation(landScapeShader.ID, "lightColor"), lightColor.x, lightColor.y, lightColor.z, lightColor.w);
 	glUniform3f(glGetUniformLocation(landScapeShader.ID, "lightPos"), lightPos.x, lightPos.y, lightPos.z);
 
-	Shader LightShader("light.vert", "light.frag");
+	Shader LightShader("default.vert", "light.frag");
+	LightShader.Activate();
+	glUniform4f(glGetUniformLocation(LightShader.ID, "lightColor"), lightColor.x, lightColor.y, lightColor.z, lightColor.w);
 
 
 	// Enables the Depth Buffer
@@ -207,7 +212,6 @@ int main()
 
 	unsigned int instanceCount = 1000;
 
-	Landscape LS("recourses/Heigtmaps/heightmap.png", 1);
 	Camera camera(SCREEN_WIDTH, SCREEN_HEIGTH, glm::vec3(0.0f, 0.0f, 2.0f), LS);
 	std::vector <glm::mat4> instanceMatrix = randomInstanceMatrix(instanceCount, LS, 1.0, 3.0);
 	std::vector <glm::mat4> instanceMatrix2 = randomInstanceMatrix(instanceCount, LS, 0.1, 0.9);
@@ -215,6 +219,8 @@ int main()
 	Model model3("models/bunny/scene.gltf", &LS);
 
 	Model model("models/tree/island_tree_01_1k.gltf", &LS, instanceCount, instanceMatrix);
+	Model lantern("models/fire/Lantern_01_1k.gltf", &LS);
+	Model lightBulb("models/lightbulb/Lightbulb_01_1k.gltf", &LS);
 
 	ShadowMap shadowMap(lightPos);
 	shadowMap.sendLightSpaceMatrix(shaderProgram);
@@ -323,7 +329,8 @@ int main()
 		LS.drawTerrain(landScapeShader, camera);
 
 		model.Draw(instanceShader, camera);
-
+		lantern.Draw(shaderProgram, camera, glm::vec2(0, 0));
+		lightBulb.Draw(LightShader, camera, glm::vec3(0, 9.1, 0));
 		model3.Draw(shaderProgram, camera, glm::vec2(1, 1));
 
 

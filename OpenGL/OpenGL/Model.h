@@ -18,6 +18,8 @@ public:
 	void Draw(Shader& shader, Camera& camera);
 	void Draw(Shader& shader, Camera& camera, glm::vec2 location);
 
+	void Draw(Shader& shader, Camera& camera, glm::vec3 location3D);
+
 
 private:
 
